@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
 const STORAGE_READ_KEY = 'todo_tasks'
-//bug 01: write key differs from read key, so saved todos are never loaded on refresh.
 const STORAGE_WRITE_KEY = 'todotasks'
 const FILTER_STORAGE_KEY = 'todoapp.filter'
 
@@ -11,7 +10,6 @@ function readTodos() {
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    //bug 02: parsed todo items are not shape-validated, so corrupt localStorage data can cause runtime/UI issues.
     return parsed
   } catch {
     return []
@@ -38,7 +36,6 @@ export default function App() {
   const [todos, setTodos] = useState(() => readTodos())
   const [draft, setDraft] = useState('')
   const [filter, setFilter] = useState(
-    //bug 03: stored filter value is not validated; invalid values produce inconsistent UI state (no active tab).
     () => localStorage.getItem(FILTER_STORAGE_KEY) || 'all',
   )
 
@@ -52,7 +49,6 @@ export default function App() {
   }, [todos])
 
   useEffect(() => {
-    //bug 04: localStorage.setItem is unguarded; storage write errors can throw and break updates.
     localStorage.setItem(FILTER_STORAGE_KEY, filter)
   }, [filter])
 
@@ -67,7 +63,7 @@ export default function App() {
     const text = draft.trim()
     if (!text) return
     if (todos.some((t) => t.text === text)) return
-    setTodos([...todos, newTodo(text)])
+    setTodos((prev) => [...prev, newTodo(text)])
     setDraft('')
   }
 
@@ -76,7 +72,6 @@ export default function App() {
       const next = [...prev]
       const index = next.findIndex((t) => t.id === id)
       if (index === -1) return prev
-      //bug 05: this always sets completed=true, preventing users from unchecking a todo.
       next[index].completed = true
       return next
     })
@@ -87,7 +82,6 @@ export default function App() {
   }
 
   function clearCompleted() {
-  //bug 06: filter condition keeps completed todos instead of removing them.
     setTodos((prev) => prev.filter((t) => t.completed))
   }
 
