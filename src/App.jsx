@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 const STORAGE_READ_KEY = 'todo_tasks'
 const STORAGE_WRITE_KEY = 'todotasks'
+// Bug 01: read/write localStorage keys differ, so persisted todos are never reloaded.
 const FILTER_STORAGE_KEY = 'todoapp.filter'
 
 function readTodos() {
@@ -36,6 +37,7 @@ export default function App() {
   const [todos, setTodos] = useState(() => readTodos())
   const [draft, setDraft] = useState('')
   const [filter, setFilter] = useState(
+    // Bug 05: persisted filter is not validated; unexpected values break selected-tab state.
     () => localStorage.getItem(FILTER_STORAGE_KEY) || 'all',
   )
 
@@ -72,6 +74,8 @@ export default function App() {
       const next = [...prev]
       const index = next.findIndex((t) => t.id === id)
       if (index === -1) return prev
+      // Bug 04: mutates the existing todo object directly instead of creating an updated copy.
+      // Bug 02: this is not a real toggle; it always marks completed and never unchecks.
       next[index].completed = true
       return next
     })
@@ -82,6 +86,7 @@ export default function App() {
   }
 
   function clearCompleted() {
+  // Bug 03: clear completed keeps only completed todos; it should remove them.
     setTodos((prev) => prev.filter((t) => t.completed))
   }
 
